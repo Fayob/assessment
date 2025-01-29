@@ -9,7 +9,6 @@ function App() {
   const [amount, setAmount] = useState("")
   const [provider, setProvider] = useState(null)
   const [account, setAccount] = useState(null)
-  // const [signer, setSigner] = useState(null)
   const [contract, setContract] = useState(null)
 
   const conttractAddress = "0xAC7D133Fa5A84b26701B95c083695fBFD92ebE5b"
@@ -23,34 +22,27 @@ function App() {
     }
   }, [])
 
-  useEffect(() => {
-    async function connection() {
-      if (provider) {
-        const signer = await provider.getSigner()
-        // setSigner(signer)
-        const contract = new ethers.Contract(conttractAddress, contractABI, signer)
-        setContract(contract)
-      }
-    }
-    connection()
-  }, [provider])
-
   async function connectWallet() {
+    if (provider) {
+      const signer = await provider.getSigner()
+      const contract = new ethers.Contract(conttractAddress, contractABI, signer)
+      setContract(contract)
+    }
     try {
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts"})
       setAccount(accounts[0])
       toast.success("Wallet connected successfully")
     } catch (error) {
-      toast.error("Wallet connection failed ", error);
+      toast.error("Wallet connection failed");
     }
   }
 
   async function getBalance() {
     if (contract) {
       const contractBalance = await contract.getBalance()
-      setBalance(ethers.formatEther(contractBalance))
+      setBalance(ethers.formatEther(contractBalance))      
     } else {
-      toast.error("Contract not found");
+      toast.error("Please connect your wallet");
     }
   }
 
@@ -59,9 +51,9 @@ function App() {
       const tx = await contract.deposit(ethers.parseEther(amount))
       await tx.wait()
       getBalance()
-      toast.success("Deposit successful"); 
+      toast.success(<p>Your Deposit of ${amount}ETH was successful</p>); 
     } else {
-      toast.error("Contract not found");
+      toast.error("Please connect your wallet");
     }
   }
 
@@ -70,15 +62,15 @@ function App() {
       const tx = await contract.withdraw(ethers.parseEther(amount))
       await tx.wait()
       getBalance()
-      toast.success("Successfully withdraw ", amount,"ETH");
+      toast.success(<p>Successfully withdraw ${amount} ETH</p>);
     } else {
-      toast.error("Contract not found");
+      toast.error("Please connect your wallet");
     }
   }
 
   return (
     <div>
-      <div> <ToastContainer position="top-right" autoClose={3000} /></div>
+      <div> <ToastContainer position="top-right" autoClose={2000} /></div>
       <h2>DApp Mini App</h2>
       {account ? <p>Connected to {account.slice(0, 6)}...{account.slice(account.length-6)} </p> :
       <button onClick={connectWallet}> Connect Wallet </button>
